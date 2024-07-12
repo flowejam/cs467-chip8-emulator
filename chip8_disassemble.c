@@ -19,7 +19,9 @@ int main(int argc, char* argv[]) {
 	}
 
 	unsigned char buf[_BUF_SIZE_] = {0};
-	for (;;) {
+
+	//for (;;) {
+	for (int i = 0; i < 10; ++i) {
 		if (feof(fp)) {
 			break;
 		}
