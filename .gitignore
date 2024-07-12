@@ -1,0 +1,8 @@
+# vim
+*~
+
+# obj files
+*.o
+
+# ROM
+chickenScratch.ch8
