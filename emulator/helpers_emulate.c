@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include "helpers_emulate.h"
 
+// TODO: include reference to: https://en.wikipedia.org/wiki/CHIP-8
+
 /*
  * Accepts values from 0x01-0x0F for registers v0-vf
  */
@@ -197,6 +199,56 @@ static void exec_op_04(StateStructChip8* state, OpcodeStruct* opstruct) {
 	}
 }
 
+static void exec_op_05(StateStructChip8* state, OpcodeStruct* opstruct) {
+	fprintf(stdout, "executing: if (V%.01X == V%.01X)\n", opstruct->second_nibble, opstruct->third_nibble);
+	if (get_reg(state, opstruct->second_nibble) == get_reg(state, opstruct->third_nibble)) {
+		state->program_ctr += 2;
+	}
+}
+
+static void exec_op_06(StateStructChip8* state, OpcodeStruct* opstruct) {
+	fprintf(stdout, "executing: V%.01X = 0x%.02X\n", opstruct->second_nibble, opstruct->second_byte);
+	set_reg(state, opstruct->second_nibble, opstruct->second_byte);
+}
+
+static void exec_op_07(StateStructChip8* state, OpcodeStruct* opstruct) {
+	fprintf(stdout, "executing: V%.01X += 0x%.02X\n", opstruct->second_nibble, opstruct->second_byte);
+	// the carry flag is not changed during this operation
+	unsigned char reg_val = get_reg(state, opstruct->second_nibble);
+	reg_val += opstruct->second_byte;
+	set_reg(state, opstruct->second_nibble, reg_val);
+}
+
+static void exec_op_08(StateStructChip8* state, OpcodeStruct* opstruct) {
+	// TODO
+	if (opstruct->fourth_nibble == 0x00) {
+		fprintf(stdout, "executing: V%.01X = V%.01X\n", opstruct->second_nibble, opstruct->third_nibble);
+		set_reg(state, opstruct->second_nibble, get_reg(state, opstruct->third_nibble));
+
+	} else if (opstruct->fourth_nibble == 0x01) {
+		fprintf(stdout, "executing: V%.01X |= V%.01X\n", opstruct->second_nibble, opstruct->third_nibble);
+		unsigned char res = get_reg(state, opstruct->second_nibble) | get_reg(state, opstruct->third_nibble);
+		set_reg(state, opstruct->second_nibble, res);
+
+	} else if (opstruct->fourth_nibble == 0x02) {
+		fprintf(stdout, "executing: V%.01X &= V%.01X\n", opstruct->second_nibble, opstruct->third_nibble);
+	} else if (opstruct->fourth_nibble == 0x03) {
+		fprintf(stdout, "executing: V%.01X ^= V%.01X\n", opstruct->second_nibble, opstruct->third_nibble);
+	} else if (opstruct->fourth_nibble == 0x04) {
+		fprintf(stdout, "executing: V%.01X += V%.01X\n", opstruct->second_nibble, opstruct->third_nibble);
+	} else if (opstruct->fourth_nibble == 0x05) {
+		fprintf(stdout, "executing: V%.01X -= V%.01X\n", opstruct->second_nibble, opstruct->third_nibble);
+	} else if (opstruct->fourth_nibble == 0x06) {
+		fprintf(stdout, "executing: V%.01X >>= 1\n", opstruct->second_nibble);
+	} else if (opstruct->fourth_nibble == 0x07) {
+		fprintf(stdout, "executing: V%.01X = V%.01X - V%.01X\n", opstruct->second_nibble, opstruct->third_nibble, opstruct->second_nibble);
+	} else if (opstruct->fourth_nibble == 0x0E) {
+		fprintf(stdout, "executing: V%.01X <<= 1\n", opstruct->second_nibble);
+	} else {
+		// do nothing
+	}
+}
+
 extern int decode_and_execute(StateStructChip8* state) {
 
 	unsigned char first_byte = state->mem[state->program_ctr];
@@ -249,23 +301,21 @@ extern int decode_and_execute(StateStructChip8* state) {
 					break;
 
 		case 0x05:
-					// TODO
-					if (fourth_nibble == 0x00) {
-						fprintf(stdout, "if (V%.01X == V%.01X)\n", second_nibble, third_nibble);
-					} else {
-						fprintf(stdout, "\n");
-					}
+					exec_op_05(state, &opcode_struct);
 					break;
 
 		case 0x06:
-					fprintf(stdout, "V%.01X = 0x%.02X\n", second_nibble, second_byte);
+					exec_op_06(state, &opcode_struct);
 					break;
 
 		case 0x07:
-					fprintf(stdout, "V%.01X += 0x%.02X\n", second_nibble, second_byte);
+					exec_op_07(state, &opcode_struct);
 					break;
 
 		case 0x08:
+					// TODO:
+					exec_op_08(state, &opcode_struct);
+
 					if (fourth_nibble == 0x00) {
 						fprintf(stdout, "V%.01X = V%.01X\n", second_nibble, third_nibble);
 					} else if (fourth_nibble == 0x01) {
