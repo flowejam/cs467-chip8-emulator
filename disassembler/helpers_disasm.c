@@ -17,7 +17,9 @@ extern int decode(long program_ctr, unsigned char* buf) {
 	unsigned char third_nibble = second_byte >> 4;
 	unsigned char fourth_nibble = second_byte & ~0xF0;
 
-	fprintf(stdout, "first, second byte: 0x%.02X, 0x%.02X\n", first_byte, second_byte); 
+	// print the address in the program counter, followed by the 2 byte opcode
+	fprintf(stdout, "0%.03lX ", program_ctr);
+	fprintf(stdout, "0x%.02X 0x%.02X ", first_byte, second_byte); 
 
 	int addr = 0;
 	addr = (int)second_nibble << 8;
@@ -35,6 +37,8 @@ extern int decode(long program_ctr, unsigned char* buf) {
 					} else {
 						if (addr != 0x000) {
 							fprintf(stdout, "call machine code routine at 0x%.03X\n", addr);
+						} else {
+							fprintf(stdout, "\n");
 						}
 					}
 					break;
@@ -58,6 +62,8 @@ extern int decode(long program_ctr, unsigned char* buf) {
 		case 0x05:
 					if (fourth_nibble == 0x00) {
 						fprintf(stdout, "if (V%.01X == V%.01X)\n", second_nibble, third_nibble);
+					} else {
+						fprintf(stdout, "\n");
 					}
 					break;
 
@@ -88,12 +94,16 @@ extern int decode(long program_ctr, unsigned char* buf) {
 						fprintf(stdout, "V%.01X = V%.01X - V%.01X\n", second_nibble, third_nibble, second_nibble);
 					} else if (fourth_nibble == 0x0E) {
 						fprintf(stdout, "V%.01X <<= 1\n", second_nibble);
+					} else {
+						fprintf(stdout, "\n");
 					}
 					break;
 
 		case 0x09:
 					if (fourth_nibble == 0x00) {
 						fprintf(stdout, "if (V%.01X != V%.01X\n", second_nibble, third_nibble);
+					} else {
+						fprintf(stdout, "\n");
 					}
 					break;
 
@@ -101,14 +111,57 @@ extern int decode(long program_ctr, unsigned char* buf) {
 					fprintf(stdout, "I = 0x%.03X\n", addr);
 					break;
 
-		//case 0x0B:
-		//			// TODO
-		//			break;
+		case 0x0B:
+					fprintf(stdout, "PC = V0 + 0x%.03X\n", addr);
+					break;
+
+		case 0x0C:
+					fprintf(stdout, "V%.01X = rand() & 0x%.02X\n", second_nibble, second_byte);
+					break;
+
+		case 0x0D:
+					fprintf(stdout, "draw(V%.01X, V%.01X, 0x%.01X)\n", second_nibble, third_nibble, fourth_nibble);
+					break;
+
+		case 0x0E:
+					if (second_byte == 0x9E) {
+						fprintf(stdout, "if (key() == V%.01X)\n", second_nibble);
+					} else if (second_byte == 0xA1) {
+						fprintf(stdout, "if (key() != V%.01X)\n", second_nibble);
+					} else {
+						fprintf(stdout, "\n");
+					}
+					break;
+
+		case 0x0F:
+					if (second_byte == 0x07) {
+						fprintf(stdout, "V%.01X = get_delay()\n", second_nibble);
+					} else if (second_byte == 0x0A) {
+						fprintf(stdout, "V%.01X = get_key()\n", second_nibble);
+					} else if (second_byte == 0x15) {
+						fprintf(stdout, "delay_timer(V%.01X)\n", second_nibble);
+					} else if (second_byte == 0x18) {
+						fprintf(stdout, "sound_timer(V%.01X)\n", second_nibble);
+					} else if (second_byte == 0x1E) {
+						fprintf(stdout, "I += V%.01X\n", second_nibble);
+					} else if (second_byte == 0x29) {
+						fprintf(stdout, "I = sprite_addr[V%.01X]\n", second_nibble);
+					} else if (second_byte == 0x33) {
+						fprintf(stdout, "set_BCD(V%.01X)\n*(I+0) = BCD(3);\n*(I+1) = BCD(2);\n*(I+2) = BCD(1);\n", second_nibble);
+					} else if (second_byte == 0x55) {
+						fprintf(stdout, "reg_dump(V%.01X, &I)\n", second_nibble);
+					} else if (second_byte == 0x65) {
+						fprintf(stdout, "reg_load(V%.01X, &I)\n", second_nibble);
+					} else {
+						fprintf(stdout, "\n");
+					}
+					break;
 
 		default:
-					unimplemented_op = (int)first_byte << 8;
-					unimplemented_op = unimplemented_op | second_byte;
-					fprintf(stdout, "Unimplemented opcode: 0x%.04X\n", unimplemented_op);
+					//unimplemented_op = (int)first_byte << 8;
+					//unimplemented_op = unimplemented_op | second_byte;
+					//fprintf(stdout, "Unimplemented opcode: 0x%.04X\n", unimplemented_op);
+					fprintf(stdout, "\n");
 					break;
 	}
 

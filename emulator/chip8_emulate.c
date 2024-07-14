@@ -1,6 +1,8 @@
+// TODO: include sources
+
 #include <stdlib.h>
 #include <stdio.h>
-#include "helpers_disasm.h"
+#include "helpers_emulate.h"
 
 #ifndef _BUF_SIZE_
 #define _BUF_SIZE_ 3
@@ -18,8 +20,6 @@ int main(int argc, char* argv[]) {
 		fprintf(stderr, "Error in func main: opening the file %s caused an error\n", argv[1]);
 		exit(EXIT_FAILURE);
 	}
-
-	//unsigned char buf[_BUF_SIZE_] = {0};
 
 	long initial_offset = ftell(fp);
 	if (initial_offset < 0) {
@@ -42,7 +42,9 @@ int main(int argc, char* argv[]) {
 	}
 	fprintf(stdout, "end_offset: %ld\n", end_offset); 
 
-	unsigned char* buf = malloc(end_offset + 0x200);
+	// ============ start of emulation ===========================
+
+	unsigned char* buf = calloc(4096, 1);
 	if (!buf) {
 		fprintf(stderr, "Error in func main: error encountered when calling malloc.\n");
 		exit(EXIT_FAILURE);
@@ -66,33 +68,28 @@ int main(int argc, char* argv[]) {
 		goto CLEANUP;
 	}
 
-	long program_ctr = 0x200;
-	while (program_ctr < (end_offset+0x200)) {
-		int decode_result = decode(program_ctr, buf);
-		if (decode_result < 0) {
+
+	// TODO: include reference
+	// The CHIP-8 interpreter takes up the first 512 bytes of memory.
+	RegisterStructChip8 registers = {0};
+	StateStructChip8 state_chip8 = {
+		.regs = &registers, 
+		.program_ctr = 0x200, 
+		.mem = buf,
+	};
+
+	state_chip8.display = &state_chip8.mem[0xF00];
+	state_chip8.stack = &state_chip8.mem[0xEA0];
+	state_chip8.stack_ptr = 0;
+
+	while (state_chip8.program_ctr < (end_offset+0x200)) {
+		int res = decode_and_execute(&state_chip8);
+		if (res < 0) {
 			goto CLEANUP;
 		}
-		program_ctr += 2;
+		state_chip8.program_ctr += 2;
 	}
 
-	//for (;;) {
-	//for (int i = 0; i < 10; ++i) {
-	//	if (feof(fp)) {
-	//		break;
-	//	}
-
-	//	size_t nread = fread(buf, 1, sizeof(buf), fp);
-	//	if (ferror(fp)) {
-	//		fprintf(stderr, "Error in func main: an error occurred while reading from the given file.\n");
-	//		goto CLEANUP;
-	//	}
-
-	//	int decode_result = decode(nread, buf);
-	//	if (decode_result < 0) {
-	//		goto CLEANUP;
-	//	}
-
-	//}
 
 CLEANUP:;
 	free(buf);

@@ -4,8 +4,10 @@
 # obj files
 *.o
 
-# ROM
+# ROMs
 chickenScratch.ch8
+octojam1title.ch8
 
 # executables
 chip8_disassemble
+chip8_emulate
