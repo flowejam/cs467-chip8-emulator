@@ -270,11 +270,41 @@ static void exec_op_08(StateStructChip8* state, OpcodeStruct* opstruct) {
 
 	} else if (opstruct->fourth_nibble == 0x06) {
 		fprintf(stdout, "executing: V%.01X >>= 1\n", opstruct->second_nibble);
-		// TODO
+		unsigned char reg_val = get_reg(state, opstruct->second_nibble);
+		unsigned char lsb = reg_val & 0x01;
+		reg_val >>= 1;
+		set_reg(state, opstruct->second_nibble, reg_val);
+		set_reg(state, 0x0F, lsb);
+
 	} else if (opstruct->fourth_nibble == 0x07) {
 		fprintf(stdout, "executing: V%.01X = V%.01X - V%.01X\n", opstruct->second_nibble, opstruct->third_nibble, opstruct->second_nibble);
+		unsigned char reg1 = get_reg(state, opstruct->second_nibble);
+		unsigned char reg2 = get_reg(state, opstruct->third_nibble);
+
+		if (reg2 < reg1) {
+			// underflow
+			set_reg(state, 0x0F, 0x00);
+		} else {
+			set_reg(state, 0x0F, 0x01);
+		}
+
+		unsigned char res = reg2 - reg1;
+
+		set_reg(state, opstruct->second_nibble, res);
+
 	} else if (opstruct->fourth_nibble == 0x0E) {
 		fprintf(stdout, "executing: V%.01X <<= 1\n", opstruct->second_nibble);
+		unsigned char reg_val = get_reg(state, opstruct->second_nibble);
+		unsigned char msb = reg_val & 0x80;
+		reg_val <<= 1;
+		set_reg(state, opstruct->second_nibble, reg_val);
+
+		if (msb == 0) {
+			set_reg(state, 0x0F, 0x00);
+		} else {
+			set_reg(state, 0x0F, 0x01);
+		}
+
 	} else {
 		// do nothing
 	}
@@ -344,33 +374,12 @@ extern int decode_and_execute(StateStructChip8* state) {
 					break;
 
 		case 0x08:
-					// TODO:
 					exec_op_08(state, &opcode_struct);
-
-					if (fourth_nibble == 0x00) {
-						fprintf(stdout, "V%.01X = V%.01X\n", second_nibble, third_nibble);
-					} else if (fourth_nibble == 0x01) {
-						fprintf(stdout, "V%.01X |= V%.01X\n", second_nibble, third_nibble);
-					} else if (fourth_nibble == 0x02) {
-						fprintf(stdout, "V%.01X &= V%.01X\n", second_nibble, third_nibble);
-					} else if (fourth_nibble == 0x03) {
-						fprintf(stdout, "V%.01X ^= V%.01X\n", second_nibble, third_nibble);
-					} else if (fourth_nibble == 0x04) {
-						fprintf(stdout, "V%.01X += V%.01X\n", second_nibble, third_nibble);
-					} else if (fourth_nibble == 0x05) {
-						fprintf(stdout, "V%.01X -= V%.01X\n", second_nibble, third_nibble);
-					} else if (fourth_nibble == 0x06) {
-						fprintf(stdout, "V%.01X >>= 1\n", second_nibble);
-					} else if (fourth_nibble == 0x07) {
-						fprintf(stdout, "V%.01X = V%.01X - V%.01X\n", second_nibble, third_nibble, second_nibble);
-					} else if (fourth_nibble == 0x0E) {
-						fprintf(stdout, "V%.01X <<= 1\n", second_nibble);
-					} else {
-						fprintf(stdout, "\n");
-					}
 					break;
 
 		case 0x09:
+					// TODO
+					exec_op_09(state, &opcode_struct);
 					if (fourth_nibble == 0x00) {
 						fprintf(stdout, "if (V%.01X != V%.01X\n", second_nibble, third_nibble);
 					} else {
