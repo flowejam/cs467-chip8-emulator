@@ -232,14 +232,45 @@ static void exec_op_08(StateStructChip8* state, OpcodeStruct* opstruct) {
 
 	} else if (opstruct->fourth_nibble == 0x02) {
 		fprintf(stdout, "executing: V%.01X &= V%.01X\n", opstruct->second_nibble, opstruct->third_nibble);
+		unsigned char res = get_reg(state, opstruct->second_nibble) & get_reg(state, opstruct->third_nibble);
+		set_reg(state, opstruct->second_nibble, res);
+
 	} else if (opstruct->fourth_nibble == 0x03) {
 		fprintf(stdout, "executing: V%.01X ^= V%.01X\n", opstruct->second_nibble, opstruct->third_nibble);
+		unsigned char res = get_reg(state, opstruct->second_nibble) ^ get_reg(state, opstruct->third_nibble);
+		set_reg(state, opstruct->second_nibble, res);
+
 	} else if (opstruct->fourth_nibble == 0x04) {
 		fprintf(stdout, "executing: V%.01X += V%.01X\n", opstruct->second_nibble, opstruct->third_nibble);
+		uint16_t res = get_reg(state, opstruct->second_nibble) + get_reg(state, opstruct->third_nibble);
+
+		if ((res & 0xFF00) != 0) {
+			set_reg(state, 0x0F, 0x01);
+		} else {
+			set_reg(state, 0x0F, 0x00);
+		}
+
+		set_reg(state, opstruct->second_nibble, res & 0xFF);
+
 	} else if (opstruct->fourth_nibble == 0x05) {
 		fprintf(stdout, "executing: V%.01X -= V%.01X\n", opstruct->second_nibble, opstruct->third_nibble);
+		unsigned char reg1 = get_reg(state, opstruct->second_nibble);
+		unsigned char reg2 = get_reg(state, opstruct->third_nibble);
+
+		if (reg2 > reg1) {
+			// underflow
+			set_reg(state, 0x0F, 0x00);
+		} else {
+			set_reg(state, 0x0F, 0x01);
+		}
+
+		unsigned char res = reg1 - reg2;
+
+		set_reg(state, opstruct->second_nibble, res);
+
 	} else if (opstruct->fourth_nibble == 0x06) {
 		fprintf(stdout, "executing: V%.01X >>= 1\n", opstruct->second_nibble);
+		// TODO
 	} else if (opstruct->fourth_nibble == 0x07) {
 		fprintf(stdout, "executing: V%.01X = V%.01X - V%.01X\n", opstruct->second_nibble, opstruct->third_nibble, opstruct->second_nibble);
 	} else if (opstruct->fourth_nibble == 0x0E) {
