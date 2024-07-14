@@ -3,6 +3,131 @@
 #include <stdint.h>
 #include "helpers_emulate.h"
 
+/*
+ * Accepts values from 0x01-0x0F for registers v0-vf
+ */
+static void set_reg(StateStructChip8* state, unsigned char reg_val, unsigned char set_val) {
+	RegisterStructChip8* registers = state->regs;
+
+	switch(reg_val) {
+		case 0:
+			registers->v0 = set_val;
+			break;
+		case 1:
+			registers->v1 = set_val;
+			break;
+		case 2:
+			registers->v2 = set_val;
+			break;
+		case 3:
+			registers->v3 = set_val;
+			break;
+		case 4:
+			registers->v4 = set_val;
+			break;
+		case 5:
+			registers->v5 = set_val;
+			break;
+		case 6:
+			registers->v6 = set_val;
+			break;
+		case 7:
+			registers->v7 = set_val;
+			break;
+		case 8:
+			registers->v8 = set_val;
+			break;
+		case 9:
+			registers->v9 = set_val;
+			break;
+		case 0x0A:
+			registers->va = set_val;
+			break;
+		case 0x0B:
+			registers->vb = set_val;
+			break;
+		case 0x0C:
+			registers->vc = set_val;
+			break;
+		case 0x0D:
+			registers->vd = set_val;
+			break;
+		case 0x0E:
+			registers->ve = set_val;
+			break;
+		case 0x0F:
+			registers->vf = set_val;
+			break;
+		default:
+			fprintf(stderr, "Error in func get_reg: register matching value does not exist.\n");
+			break;
+	}
+}
+
+/*
+ * Accepts values from 0x01-0x0F for registers v0-vf
+ */
+static unsigned char get_reg(StateStructChip8* state, unsigned char val) {
+	RegisterStructChip8* registers = state->regs;
+
+	unsigned char res = 0;
+
+	switch(val) {
+		case 0:
+			res =  registers->v0;
+			break;
+		case 1:
+			res = registers->v1;
+			break;
+		case 2:
+			res = registers->v2;
+			break;
+		case 3:
+			res = registers->v3;
+			break;
+		case 4:
+			res = registers->v4;
+			break;
+		case 5:
+			res = registers->v5;
+			break;
+		case 6:
+			res = registers->v6;
+			break;
+		case 7:
+			res = registers->v7;
+			break;
+		case 8:
+			res = registers->v8;
+			break;
+		case 9:
+			res = registers->v9;
+			break;
+		case 0x0A:
+			res = registers->va;
+			break;
+		case 0x0B:
+			res = registers->vb;
+			break;
+		case 0x0C:
+			res = registers->vc;
+			break;
+		case 0x0D:
+			res = registers->vd;
+			break;
+		case 0x0E:
+			res = registers->ve;
+			break;
+		case 0x0F:
+			res = registers->vf;
+			break;
+		default:
+			fprintf(stderr, "Error in func get_reg: register matching value does not exist.\n");
+			break;
+	}
+	return res;
+}
+
 static void push_stack(StateStructChip8* state, uint16_t val) {
 	// CHIP-8 is big endian, so assume the MSB gets pushed first
 	unsigned char msb = (val & 0xF00) >> 8;
@@ -58,6 +183,13 @@ static void exec_op_02(StateStructChip8* state, OpcodeStruct* opstruct) {
 	state->program_ctr = opstruct->addr;
 }
 
+static void exec_op_03(StateStructChip8* state, OpcodeStruct* opstruct) {
+	fprintf(stdout, "executing: if (V%.01X == 0x%.02X)\n", opstruct->second_nibble, opstruct->second_byte);
+	if (get_reg(state, opstruct->second_nibble) == opstruct->second_byte) {
+		state->program_ctr += 2;
+	}
+}
+
 extern int decode_and_execute(StateStructChip8* state) {
 
 	unsigned char first_byte = state->mem[state->program_ctr];
@@ -102,7 +234,7 @@ extern int decode_and_execute(StateStructChip8* state) {
 					break;
 
 		case 0x03:
-					fprintf(stdout, "if (V%.01X == 0x%.02X)\n", second_nibble, second_byte);
+					exec_op_03(state, &opcode_struct);
 					break;
 
 		case 0x04:

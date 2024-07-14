@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "helpers_emulate.h"
 
 #ifndef _BUF_SIZE_
@@ -83,6 +84,9 @@ int main(int argc, char* argv[]) {
 	state_chip8.display_refresh = &state_chip8.mem[0xF00];
 	state_chip8.stack = &state_chip8.mem[0xEA0];
 	state_chip8.stack_ptr = 0;
+
+	// zero out screen
+	memset(state_chip8.screen, 0, sizeof(state_chip8.screen));
 
 	while (state_chip8.program_ctr < (end_offset+0x200)) {
 		int res = decode_and_execute(&state_chip8);
