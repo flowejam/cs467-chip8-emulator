@@ -3,13 +3,58 @@
 #include <stdint.h>
 #include "helpers_emulate.h"
 
-/*
- * Given a pointer to a buffer of size 2, return the first nibble in the first
- * element, and the second in the second element.
- */ 
+static void push_stack(StateStructChip8* state, uint16_t val) {
+	// CHIP-8 is big endian, so assume the MSB gets pushed first
+	unsigned char msb = (val & 0xF00) >> 8;
+	unsigned char lsb = val & 0x0FF;
+
+	state->stack[state->stack_ptr] = msb;
+	++(state->stack_ptr);
+	state->stack[state->stack_ptr] = lsb;
+	++(state->stack_ptr);
+}
+
+static uint16_t pop_stack(StateStructChip8* state) {
+	// CHIP-8 is big endian, so assume the MSB gets pushed first
+	unsigned char top_byte = state->stack[state->stack_ptr];
+	--(state->stack_ptr);
+	unsigned char bottom_byte = state->stack[state->stack_ptr];
+	--(state->stack_ptr);
+
+	uint16_t ret_val = bottom_byte;
+	ret_val <<= 8;
+	ret_val |= top_byte;
+	return ret_val;
+}	
 
 static void exec_op_01(StateStructChip8* state, OpcodeStruct* opstruct) {
 	fprintf(stdout, "executing: goto 0x%.03X\n", opstruct->addr);
+	state->program_ctr = opstruct->addr;
+}
+
+static void exec_op_00(StateStructChip8* state, OpcodeStruct* opstruct) {
+	if (opstruct->second_nibble == 0x00 && opstruct->second_byte == 0xE0) {
+		fprintf(stdout, "executing: disp_clear()\n");
+		for (int i = 0; i < HEIGHT_OF_SCREEN; ++i) {
+			for (int j = 0; j < WIDTH_OF_SCREEN; ++j) {
+				state->screen[i][j] = 0;
+			}	
+		}
+	
+	} else if (opstruct->second_nibble == 0x00 && opstruct->second_byte == 0xEE) {
+		fprintf(stdout, "return;\n");
+		uint16_t ret_addr = pop_stack(state);
+		state->program_ctr = ret_addr;
+	
+	} else {
+		// do nothing - this is for the RCA 1802 for COSMAC
+		return;
+	}
+}
+
+static void exec_op_02(StateStructChip8* state, OpcodeStruct* opstruct) {
+	fprintf(stdout, "executing: *(0x%.03X)()\n", opstruct->addr);
+	push_stack(state, opstruct->addr);
 	state->program_ctr = opstruct->addr;
 }
 
@@ -45,19 +90,7 @@ extern int decode_and_execute(StateStructChip8* state) {
 	//int unimplemented_op = 0;
 	switch(first_nibble) {
 		case 0x00:
-					if (second_nibble == 0x00 && second_byte == 0xE0) {
-						fprintf(stdout, "disp_clear()\n");
-
-					} else if (second_nibble == 0x00 && second_byte == 0xEE) {
-						fprintf(stdout, "return;\n");
-
-					} else {
-						if (addr != 0x000) {
-							fprintf(stdout, "call machine code routine at 0x%.03X\n", addr);
-						} else {
-							fprintf(stdout, "\n");
-						}
-					}
+					exec_op_00(state, &opcode_struct);
 					break;
 
 		case 0x01:
@@ -65,7 +98,7 @@ extern int decode_and_execute(StateStructChip8* state) {
 					break;
 
 		case 0x02:
-					fprintf(stdout, "*(0x%.03X)()\n", addr);
+					exec_op_02(state, &opcode_struct);
 					break;
 
 		case 0x03:

@@ -8,6 +8,7 @@
 #define _BUF_SIZE_ 3
 #endif
 
+
 int main(int argc, char* argv[]) {
 	if (argc != 2) {
 		fprintf(stderr, "Usage: %s _file_name_\n", argv[0]);
@@ -71,14 +72,15 @@ int main(int argc, char* argv[]) {
 
 	// TODO: include reference
 	// The CHIP-8 interpreter takes up the first 512 bytes of memory.
+
 	RegisterStructChip8 registers = {0};
 	StateStructChip8 state_chip8 = {
 		.regs = &registers, 
 		.program_ctr = 0x200, 
-		.mem = buf,
+		.mem = buf
 	};
 
-	state_chip8.display = &state_chip8.mem[0xF00];
+	state_chip8.display_refresh = &state_chip8.mem[0xF00];
 	state_chip8.stack = &state_chip8.mem[0xEA0];
 	state_chip8.stack_ptr = 0;
 

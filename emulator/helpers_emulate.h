@@ -2,6 +2,14 @@
 #define HELPERS_DISASM_H
 #include <stdint.h>
 
+#ifndef HEIGHT_OF_SCREEN
+#define HEIGHT_OF_SCREEN 32
+#endif
+
+#ifndef WIDTH_OF_SCREEN
+#define WIDTH_OF_SCREEN 64
+#endif
+
 typedef struct RegisterStructChip8 RegisterStructChip8; 
 struct RegisterStructChip8 {
 	unsigned char v0;
@@ -32,8 +40,9 @@ struct StateStructChip8 {
 	long program_ctr;
 	long stack_ptr;
 	unsigned char* stack;
-	unsigned char* display;
+	unsigned char* display_refresh;
 	unsigned char* mem;
+	unsigned char screen[HEIGHT_OF_SCREEN][WIDTH_OF_SCREEN];
 };
 
 typedef struct OpcodeStruct OpcodeStruct;

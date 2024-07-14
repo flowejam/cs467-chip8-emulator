@@ -2,10 +2,6 @@
 #include <stdio.h>
 #include "helpers_disasm.h"
 
-/*
- * Given a pointer to a buffer of size 2, return the first nibble in the first
- * element, and the second in the second element.
- */ 
 
 extern int decode(long program_ctr, unsigned char* buf) {
 
