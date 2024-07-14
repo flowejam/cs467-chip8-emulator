@@ -190,6 +190,13 @@ static void exec_op_03(StateStructChip8* state, OpcodeStruct* opstruct) {
 	}
 }
 
+static void exec_op_04(StateStructChip8* state, OpcodeStruct* opstruct) {
+	fprintf(stdout, "executing: if (V%.01X != 0x%.02X)\n", opstruct->second_nibble, opstruct->second_byte);
+	if (get_reg(state, opstruct->second_nibble) != opstruct->second_byte) {
+		state->program_ctr += 2;
+	}
+}
+
 extern int decode_and_execute(StateStructChip8* state) {
 
 	unsigned char first_byte = state->mem[state->program_ctr];
@@ -238,10 +245,11 @@ extern int decode_and_execute(StateStructChip8* state) {
 					break;
 
 		case 0x04:
-					fprintf(stdout, "if (V%.01X != 0x%.02X)\n", second_nibble, second_byte);
+					exec_op_04(state, &opcode_struct);
 					break;
 
 		case 0x05:
+					// TODO
 					if (fourth_nibble == 0x00) {
 						fprintf(stdout, "if (V%.01X == V%.01X)\n", second_nibble, third_nibble);
 					} else {
