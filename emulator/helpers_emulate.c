@@ -344,6 +344,13 @@ static void exec_op_0c(StateStructChip8* state, OpcodeStruct* opstruct) {
 
 static void exec_op_0d(StateStructChip8* state, OpcodeStruct* opstruct) {
 	fprintf(stdout, "execute: draw(V%.01X, V%.01X, 0x%.01X)\n", opstruct->second_nibble, opstruct->third_nibble, opstruct->fourth_nibble);
+	unsigned char* sprite_data_start = &(state->mem[state->regs->I]); 
+
+	for (int i = 0; i < (int)opstruct->fourth_nibble; ++i) {
+		unsigned char sprite_data = *(sprite_data_start + i); 
+		// TODO: go through each bit in the byte of data, XORing with the appropriate 
+		// data on the screen.
+	}
 }
 
 extern int decode_and_execute(StateStructChip8* state) {
