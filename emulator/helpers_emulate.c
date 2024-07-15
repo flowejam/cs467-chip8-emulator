@@ -310,6 +310,40 @@ static void exec_op_08(StateStructChip8* state, OpcodeStruct* opstruct) {
 	}
 }
 
+static void exec_op_09(StateStructChip8* state, OpcodeStruct* opstruct) {
+	if (opstruct->fourth_nibble == 0x00) {
+		fprintf(stdout, "executing: if (V%.01X != V%.01X\n", opstruct->second_nibble, opstruct->third_nibble);
+		unsigned char reg1 = get_reg(state, opstruct->second_nibble);
+		unsigned char reg2 = get_reg(state, opstruct->third_nibble);
+		if (reg1 != reg2) {
+			state->program_ctr += 2;
+		}
+	} else {
+		// do nothing
+	}
+}
+
+static void exec_op_0a(StateStructChip8* state, OpcodeStruct* opstruct) {
+	fprintf(stdout, "executing: I = 0x%.03X\n", opstruct->addr);
+	state->regs->I = opstruct->addr;
+}
+
+static void exec_op_0b(StateStructChip8* state, OpcodeStruct* opstruct) {
+	fprintf(stdout, "executing: PC = V0 + 0x%.03X\n", opstruct->addr);
+	state->program_ctr = get_reg(state, 0x00) + opstruct->addr;
+}
+
+static void exec_op_0c(StateStructChip8* state, OpcodeStruct* opstruct) {
+	fprintf(stdout, "executing: V%.01X = rand() & 0x%.02X\n", opstruct->second_nibble, opstruct->second_byte);
+	int rand_num = rand() % 255;
+	unsigned char res = (unsigned char)rand_num & opstruct->second_byte;
+	set_reg(state, opstruct->second_nibble, res);
+}
+
+static void exec_op_0d(StateStructChip8* state, OpcodeStruct* opstruct) {
+	fprintf(stdout, "execute: draw(V%.01X, V%.01X, 0x%.01X)\n", opstruct->second_nibble, opstruct->third_nibble, opstruct->fourth_nibble);
+}
+
 extern int decode_and_execute(StateStructChip8* state) {
 
 	unsigned char first_byte = state->mem[state->program_ctr];
@@ -378,29 +412,24 @@ extern int decode_and_execute(StateStructChip8* state) {
 					break;
 
 		case 0x09:
-					// TODO
 					exec_op_09(state, &opcode_struct);
-					if (fourth_nibble == 0x00) {
-						fprintf(stdout, "if (V%.01X != V%.01X\n", second_nibble, third_nibble);
-					} else {
-						fprintf(stdout, "\n");
-					}
 					break;
 
 		case 0x0A:
-					fprintf(stdout, "I = 0x%.03X\n", addr);
+					exec_op_0a(state, &opcode_struct);
 					break;
 
 		case 0x0B:
-					fprintf(stdout, "PC = V0 + 0x%.03X\n", addr);
+					exec_op_0b(state, &opcode_struct);
 					break;
 
 		case 0x0C:
-					fprintf(stdout, "V%.01X = rand() & 0x%.02X\n", second_nibble, second_byte);
+					exec_op_0c(state, &opcode_struct);
 					break;
 
 		case 0x0D:
-					fprintf(stdout, "draw(V%.01X, V%.01X, 0x%.01X)\n", second_nibble, third_nibble, fourth_nibble);
+					// TODO
+					exec_op_0d(state, &opcode_struct);
 					break;
 
 		case 0x0E:
