@@ -3,7 +3,9 @@
 #include <stdint.h>
 #include "helpers_emulate.h"
 
-// TODO: include reference to: https://en.wikipedia.org/wiki/CHIP-8
+// TODO: cite references
+// 1) Disassembler pt 1. Emulator 101 - Disassembler pt 1. (accessed July 14, 2024). http://www.emulator101.com/disassembler-pt-1.html
+// 2) Wikipedia contributors. (2024, May 29). CHIP-8. In Wikipedia, The Free Encyclopedia. Retrieved 07:39 PST, July 14, 2024, from https://en.wikipedia.org/w/index.php?title=CHIP-8&oldid=1226235248
 
 /*
  * Accepts values from 0x01-0x0F for registers v0-vf
